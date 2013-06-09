@@ -1,5 +1,5 @@
 var should = require('should');
-var JsonResponder = require('../index').JsonResponder;
+var JsonResponder = require('../index');
 
 var FakeResponse = function(){
   this.status = null;
