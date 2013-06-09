@@ -1,0 +1,49 @@
+{
+  "name": "json-status",
+  "description": "A connect-compatible middleware for status responses on JSON HTTP APIs",
+  "keywords": [
+    "json",
+    "status",
+    "error",
+    "api",
+    "rest",
+    "http",
+    "hypermedia"
+  ],
+  "version": "0.0.1",
+  "bugs": {
+    "url": "https://github.com/cainus/json-status/issues"
+  },
+  "scripts": {
+    "test": "make test-coveralls"
+  },
+  "maintainers": [
+    "Gregg Caines <gregg@caines.ca> (http://caines.ca)"
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+    "request": "2.19.0",
+    "mocha-lcov-reporter": "0.0.1",
+    "jscoverage": "0.3.6",
+    "coveralls": "2.0.13",
+    "mockery": "1.1.2",
+    "hottap": "1.0.0",
+    "mocha": "1.8.1",
+    "should": "1.1.0"
+  },
+  "engines": {
+    "node": ">=0.8.14",
+    "npm": "1.1.65"
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cainus/json-status.git"
+  },
+  "author": "Gregg Caines",
+  "license": "BSD"
+}
