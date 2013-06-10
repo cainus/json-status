@@ -10,7 +10,7 @@
     "http",
     "hypermedia"
   ],
-  "version": "0.0.2",
+  "version": "0.1.0",
   "bugs": {
     "url": "https://github.com/cainus/json-status/issues"
   },
@@ -30,6 +30,7 @@
     "mockery": "1.1.2",
     "hottap": "1.0.0",
     "mocha": "1.8.1",
+    "connect": "~2.7.11",
     "should": "1.1.0"
   },
   "engines": {
