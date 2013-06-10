@@ -13,384 +13,193 @@ messages simpler and more consistent.
 npm install json-status --save
 ```
 
-<!--
-<h5>res.status</h5>
-<p>
-The status module is automatically attached to your resource handler at request time. It is just a bunch of helper functions for dealing with response statuses.
-</p>
+##Setup as connect middleware
+```javascript
+  var JsonStatus = require('json-status');
+  var connect = require('connect');
+  var server = connect.createServer();
+  var responseSent = false;
+  var errorEventSent = false;
+  var statusMiddleware = JsonStatus.connectMiddleware('status', function(data){
+    console.log("error: ", data.type, data.message, data.detail);
+  });
+  server.use(statusMiddleware);
+  server.use(function(req, res){
+    res.status.internalServerError("fake error!");  // this will respond with a 500
+  });
+```
 
-<p>
-This is an important module because building great APIs requires excellent and consistent error and status reporting.
-</p>
+##No frills setup
+```javascript
+  var JsonStatus = require('json-status');
+  var http = require('http');
+  http.createServer(function (req, res) {
+    new JsonStatus(req, res).internalServerError("fake error too!");
+  }).listen(1337, '127.0.0.1');
 
-<p>
-To understand what the codes mean, please refer to <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html</a>.
-</p>
+```
 
-<h6>Usage</h6>
+##Usage
+To understand what the HTTP status codes mean, please refer to <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html</a>.
+
 These methods generally set the HTTP status and end the response, so in general you should 
 not expect to write more to the response after these. If a response body makes sense, it 
 will generally be written automatically. For clarity, it's recommended that when you call 
-one of these functions, you call it with <code class="incode">return</code> in front of it. Here's an example:
+one of these functions, you call it with `return` in front of it. Here's an example:
 
-<pre class="sh_javascript">
+```javascript
 server.route('/', {  GET : function(req, res){
                               return res.status.redirect('/someOtherUrl');
                             }});
-</pre>
-<p>
+```
+
 Here are the functions that it makes available in your method handler:
-</p>
 
-<h6>Redirect scenarios</h6>
-<section id="res-status-created">
-<dl>
-  <dt>
-res.status.created(redirectUrl);
-  </dt>
-  <dd>
+
+###Redirect scenarios
+####res.status.created(redirectUrl);
 This method is used for HTTP STATUS 201 scenarios when the server has just created a resource successfully so that the server can tell the client where to find it. It sets the status to 201 and sets the 'Location' header to the redirectUrl.
-  </dd>
-</dl>
-</section>
 
-<section id="res-status-movedPermanently">
-<dl>
-  <dt>
-    res.status.movedPermanently(redirectUrl);
-  </dt>
-  <dd>
-    This method is used for HTTP STATUS 301 scenarios where a resource has been permanently moved somewhere else so the server can tell the client where to find it. It sets the status to 301 and sets the 'Location' header to the redirectUrl.
-  </dd>
-</dl>
-</section>
+####res.status.movedPermanently(redirectUrl);
+This method is used for HTTP STATUS 301 scenarios where a resource has been permanently moved somewhere else so the server can tell the client where to find it. It sets the status to 301 and sets the 'Location' header to the redirectUrl.
 
-<section id="res-status-redirect">
-<dl>
-  <dt>
-    res.status.redirect(redirectUrl);
-  </dt>
-  <dd>
-    This is just an alias of movedPermanently()
-  </dd>
-</dl>
-</section>
+####res.status.redirect(redirectUrl);
+This is just an alias of movedPermanently()
 
-<h6>Success responses</h6>
-<p>
+###Success responses
+
 "200 OK" statuses are the default, so you don't need to specify those explicitly.
-</p>
-<p>
+
 201 Created statuses are described in the redirect section above.
-</p>
 
-<section id="res-status-accepted">
-<dl>
-  <dt>
-    res.status.accepted();
-  </dt>
-  <dd>
-    Used to indicate that a response has been accepted, but not yet processed, this response will emit a "202 Accepted" status.
-  </dd>
-</dl>
-</section>
-<section id="res-status-noContent">
-<dl>
-  <dt>
-    res.status.noContent();
-  </dt>
-  <dd>
-    Used to indicate that a request was successful, but there's no body to return (for example, a successful DELETE).  This response will emit a "204 No Content" status.
-  </dd>
-</dl>
-</section>
-<section id="res-status-resetContent">
-<dl>
-  <dt>
-    req.status.resetContent();
-  </dt>
-  <dd>
-    Used to indicate that a request was sucessful so a related UI (usually a form) should clear its content.  This response will emit a "205 Reset Content" status.
-  </dd>
-</dl>
-</section>
 
-<h6>Error Scenarios</h6>
+####res.status.accepted();
+
+Used to indicate that a response has been accepted, but not yet processed, this response will emit a "202 Accepted" status.
+
+####res.status.noContent();
+Used to indicate that a request was successful, but there's no body to return (for example, a successful DELETE).  This response will emit a "204 No Content" status.
+
+####req.status.resetContent();
+
+Used to indicate that a request was sucessful so a related UI (usually a form) should clear its content.  This response will emit a "205 Reset Content" status.
+
+
+###Error Scenarios
 All of the error scenarios are handled similarly and attempt to show a response body that indicates the error that occurred as well. The status code will be set on the response as well as in that response body.
 
 All of these methods additionally take a single parameter where additional detail information can be added. For example:
 
-<pre class="sh_javascript">
+```javascript
 server.route('/', {  GET : function(req, res){
                               return res.status.internalServerError('The server is on fire.');
                             }});
-</pre>
+```
 
-Output:<br />
-<code>
+Output:
+```javascript
 {"type":500,"message":"Internal Server Error","detail":"The server is on fire"}
-</code>
-<h6>Error response methods:</h6>
+```
 
-<section id="res-status-badRequest">
-<dl>
-  <dt>
-    res.status.badRequest([detail])
-  </dt>
-  <dd>
-    <code>
-    {"type":400,"message":"Bad Request"}
-    </code>
-  </dd>
-</dl>
-</section>
+###Error response methods:
 
-<section id="res-status-unauthenticated">
-<dl>
-  <dt>
-    res.status.unauthenticated([detail])
-  </dt>
-  <dd>
-    <code>
-      {"type":401,"message":"Unauthenticated"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.badRequest([detail])
+```javascript
+{"type":400,"message":"Bad Request"}
+```
 
-<section id="res-status-forbidden">
-<dl>
-  <dt>
-      res.status.forbidden([detail])
-  </dt>
-  <dd>
-    <code>
-      {"type":403,"message":"Forbidden"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.unauthenticated([detail])
+```javascript
+{"type":401,"message":"Unauthenticated"}
+```
 
-<section id="res-status-notFound">
-<dl>
-  <dt>
-      res.status.notFound([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":404,"message":"Not Found"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.forbidden([detail])
+```javascript
+{"type":403,"message":"Forbidden"}
+```
 
-<section id="res-status-methodNotAllowed">
+####res.status.notFound([detail])
+```javascript
+{"type":404,"message":"Not Found"}
+```
 
-<dl>
-  <dt>
-      res.status.methodNotAllowed([detail])
-  </dt>
-  <dd>
-    <code>
-      {"type":405,"message":"Method Not Allowed"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.methodNotAllowed([detail])
+```javascript
+{"type":405,"message":"Method Not Allowed"}
+```
 
-<section id="res-status-notAcceptable">
-<dl>
-  <dt>
-      res.status.notAcceptable([detail])
-  </dt>
-  <dd>
-    <code>
-      {"type":406,"message":"Not Acceptable"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.notAcceptable([detail])
+```javascript
+{"type":406,"message":"Not Acceptable"}
+```
 
+####res.status.conflict([detail])
+```javascript
+{"type":409,"message":"Conflict"}
+```
 
-<section id="res-status-conflict">
-<dl>
-  <dt>
-      res.status.conflict([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":409,"message":"Conflict"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.gone([detail])
+```javascript
+{"type":410,"message":"Gone"}
+```
 
-<section id="res-status-gone">
-<dl>
-  <dt>
-      res.status.gone([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":410,"message":"Gone"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.lengthRequired([detail])
+```javascript
+{"type":411,"message":"Length Required"}
+```
 
-<section id="res-status-lengthRequired">
-<dl>
-  <dt>
-      res.status.lengthRequired([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":411,"message":"Length Required"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.preconditionFailed([detail])
+```javascript
+{"type":412,"message":"Precondition Failed"}
+```
 
-<section id="res-status-preconditionFailed">
-<dl>
-  <dt>
-      res.status.preconditionFailed([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":412,"message":"Precondition Failed"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.requestEntityTooLarge([detail])
+```javascript
+{"type":413,"message":"'Request Entity Too Large"}
+```
 
-<section id="res-status-requestEntityTooLarge">
-<dl>
-  <dt>
-      res.status.requestEntityTooLarge([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":413,"message":"'Request Entity Too Large"}
-    </code>
-  </dd>
-</dl>
-</section>
-
-<section id="res-status-requestUriTooLong">
-<dl>
-  <dt>
-res.status.requestUriTooLong([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.requestUriTooLong([detail])
+```javascript
 {"type":414,"message":"Request URI Too Long"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-unsupportedMediaType">
-<dl>
-  <dt>
-res.status.unsupportedMediaType([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.unsupportedMediaType([detail])
+```javascript
 {"type":415,"message":"Unsupported Media Type"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-unprocessableEntity">
-<dl>
-  <dt>
-res.status.unprocessableEntity([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.unprocessableEntity([detail])
+```javascript
 {"type":422,"message":"'Unprocessable Entity"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-tooManyRequests">
-<dl>
-  <dt>
-res.status.tooManyRequests([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.tooManyRequests([detail])
+```javascript
 {"type":429,"message":"Too Many Requests"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-internalServerError">
-<dl>
-  <dt>
-res.status.internalServerError([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.internalServerError([detail])
+```javascript
 {"type":500,"message":"Internal Server Error"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-notImplemented">
-<dl>
-  <dt>
-res.status.notImplemented([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.notImplemented([detail])
+```javascript
 {"type":501,"message":"Not Implemented"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-badGateway">
-<dl>
-  <dt>
-res.status.badGateway([detail])
-  </dt>
-  <dd>
-    <code>
+####res.status.badGateway([detail])
+```javascript
 {"type":502,"message":"Bad Gateway"}
-    </code>
-  </dd>
-</dl>
-</section>
+```
 
-<section id="res-status-serviceUnavailable">
-<dl>
-  <dt>
-      res.status.serviceUnavailable([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":503,"message":"Service Unavailable"}
-    </code>
-  </dd>
-</dl>
-</section>
+####res.status.serviceUnavailable([detail])
+```javascript
+{"type":503,"message":"Service Unavailable"}
+```
 
-<section id="res-status-gatewayTimeout">
-<dl>
-  <dt>
-      res.status.gatewayTimeout([detail])
-  </dt>
-  <dd>
-    <code>
-        {"type":504,"message":"Gateway Timeout"}
-    </code>
-  </dd>
-</dl>
-</section>
--->
+####res.status.gatewayTimeout([detail])
+```javascript
+{"type":504,"message":"Gateway Timeout"}
+```
+
