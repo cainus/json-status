@@ -166,13 +166,23 @@ describe("JsonStatus", function(){
       JSON.parse(fakeRes.body)['allowed methods'].should.eql(["GET", "POST"]);
     });
   });
-  describe("#redirect", function(){
-    it ("sets the Location header and sets the status to 301", function(){
+  describe("#found", function(){
+    it ("sets the Location header and sets the status to 302", function(){
       var fakeRes = new FakeResponse();
       var responder = new JsonStatus({}, fakeRes);
-      responder.movedPermanently("SOMEURL");
+      responder.found("SOMEURL");
       fakeRes.headers.Location.should.equal("SOMEURL");
-      fakeRes.status.should.equal(301);
+      fakeRes.status.should.equal(302);
+      fakeRes.ended.should.equal(true);
+    });
+  });
+  describe("#redirect", function(){
+    it ("sets the Location header and sets the status to 302", function(){
+      var fakeRes = new FakeResponse();
+      var responder = new JsonStatus({}, fakeRes);
+      responder.redirect("SOMEURL");
+      fakeRes.headers.Location.should.equal("SOMEURL");
+      fakeRes.status.should.equal(302);
       fakeRes.ended.should.equal(true);
     });
   });
@@ -193,8 +203,8 @@ describe("JsonStatus", function(){
       server.use(function(req, res){
         res.status.accepted();
       });
-      server.listen(8080, function(){
-        request('http://localhost:8080/', function(err, res, body){
+      server.listen(8081, function(){
+        request('http://localhost:8081/', function(err, res, body){
           res.statusCode.should.equal(202);
           body.should.equal('');
           done();
@@ -207,8 +217,8 @@ describe("JsonStatus", function(){
       server.use(function(req, res){
         res.ohyeah.accepted();
       });
-      server.listen(8081, function(){
-        request('http://localhost:8081/', function(err, res, body){
+      server.listen(8079, function(){
+        request('http://localhost:8079/', function(err, res, body){
           res.statusCode.should.equal(202);
           body.should.equal('');
           done();
