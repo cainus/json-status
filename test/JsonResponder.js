@@ -15,11 +15,11 @@ var FakeResponse = function(){
     this.headers[name] = value;
   };
   this.write = function(out){
-    this.body += out;
+    this.body += out || '';
   };
   this.end = function(out){
     this.ended = true;
-    this.body += out;
+    this.body += out || '';
   };
 };
 
