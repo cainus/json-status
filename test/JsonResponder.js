@@ -198,6 +198,15 @@ describe("JsonStatus", function(){
       fakeRes.status.should.equal(201);
       fakeRes.ended.should.equal(true);
     });
+    it ("accepts an optional data parameter", function(){
+      var fakeRes = new FakeResponse();
+      var responder = new JsonStatus({}, fakeRes);
+      responder.created("SOMEURL", {data: "data"});
+      fakeRes.headers.Location.should.equal("SOMEURL");
+      fakeRes.status.should.equal(201);
+      fakeRes.ended.should.equal(true);
+      JSON.parse(fakeRes.body).data.should.eql("data");
+    });
   });
   describe("connectMiddleware", function(){
     it ("adds a 'status' object to the response object", function(done){
