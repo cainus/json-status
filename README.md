@@ -57,8 +57,8 @@ Here are the functions that it makes available in your method handler:
 
 
 ###Redirect scenarios
-####res.status.created(redirectUrl);
-This method is used for HTTP STATUS 201 scenarios when the server has just created a resource successfully so that the server can tell the client where to find it. It sets the status to 201 and sets the 'Location' header to the redirectUrl.
+####res.status.created(redirectUrl, [responseJsonObject]);
+This method is used for HTTP STATUS 201 scenarios when the server has just created a resource successfully so that the server can tell the client where to find it. It sets the status to 201 and sets the 'Location' header to the redirectUrl.  An optional second parameter can additionally be sent to be stringified as the response body.
 
 ####res.status.movedPermanently(redirectUrl);
 This method is used for HTTP STATUS 301 scenarios where a resource has been permanently moved somewhere else so the server can tell the client where to find it. It sets the status to 301 and sets the 'Location' header to the redirectUrl.
