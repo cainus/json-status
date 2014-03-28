@@ -203,6 +203,7 @@ describe("JsonStatus", function(){
       var responder = new JsonStatus({}, fakeRes);
       responder.created("SOMEURL", {data: "data"});
       fakeRes.headers.Location.should.equal("SOMEURL");
+      fakeRes.headers['content-type'].should.equal("application/json");
       fakeRes.status.should.equal(201);
       fakeRes.ended.should.equal(true);
       JSON.parse(fakeRes.body).data.should.eql("data");
