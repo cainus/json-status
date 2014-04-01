@@ -195,6 +195,8 @@ describe("JsonStatus", function(){
       var responder = new JsonStatus({}, fakeRes);
       responder.created("SOMEURL");
       fakeRes.headers.Location.should.equal("SOMEURL");
+      should.not.exist(fakeRes.headers['content-type']);
+      // no content-type when there's no body!
       fakeRes.status.should.equal(201);
       fakeRes.ended.should.equal(true);
     });
