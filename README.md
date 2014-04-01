@@ -3,7 +3,6 @@
 Status](https://secure.travis-ci.org/cainus/json-status.png?branch=master)](http://travis-ci.org/cainus/json-status)
 [![Coverage Status](https://coveralls.io/repos/cainus/json-status/badge.png?branch=master)](https://coveralls.io/r/cainus/json-status)
 [![NPM version](https://badge.fury.io/js/json-status.png)](http://badge.fury.io/js/json-status)
-[![Size](http://wapiti.io/api/sizeBadges/json-status)](http://wapiti.io/api/sizeBadges/json-status)
 
 Json-status is a node.js library that makes JSON status and error
 messages simpler and more consistent.
