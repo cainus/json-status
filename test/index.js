@@ -41,7 +41,7 @@ describe("JsonStatus", function(){
       responder.internalServerError(expected.detail);
       fakeRes.status.should.equal(expected.type);
       fakeRes.ended.should.equal(true);
-      fakeRes.headers['Content-Type'].should.equal("application/json; charset=utf-8");
+      fakeRes.headers['Content-Type'].should.equal("application/json");
       var response = JSON.parse(fakeRes.body);
       response.error.should.eql(expected);
     });
@@ -62,7 +62,7 @@ describe("JsonStatus", function(){
       responder.internalServerError(circular);
       fakeRes.status.should.equal(expected.type);
       fakeRes.ended.should.equal(true);
-      fakeRes.headers['Content-Type'].should.equal("application/json; charset=utf-8");
+      fakeRes.headers['Content-Type'].should.equal("application/json");
       var response = JSON.parse(fakeRes.body);
       response.error.should.eql(expected);
     });
@@ -116,7 +116,7 @@ describe("JsonStatus", function(){
       responder.badRequest(expected.detail);
       fakeRes.status.should.equal(expected.type);
       fakeRes.ended.should.equal(true);
-      fakeRes.headers['Content-Type'].should.equal("application/json; charset=utf-8");
+      fakeRes.headers['Content-Type'].should.equal("application/json");
       var response = JSON.parse(fakeRes.body);
       response.error.should.eql(expected);
     });

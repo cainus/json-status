@@ -56,7 +56,7 @@ var makeErrorHandler = function(name, payload){
 
     obj.error.detail = detail;
 
-    this.res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    this.res.setHeader('Content-Type', 'application/json');
     this.res.writeHead(payload.type);
     var out = JSON.stringify(obj);
     this.res.write(out);
