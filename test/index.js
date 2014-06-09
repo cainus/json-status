@@ -23,96 +23,109 @@ var FakeResponse = function(){
   };
 };
 
+var server;
+var port = 8083;
+var url = 'http://localhost:' + port + '/';
+
 describe("JsonStatus", function(){
+  beforeEach(function(done){
+    server = {
+      close : function(done){
+        done();
+      }
+    };
+    done();
+  });
+  afterEach(function(done){
+    server.close(done);
+  });
 
   describe("#internalServerError", function(){
     it ("sets the status to 500 when the detail is a simple object", function(done){
       var fakeRes = new FakeResponse();
-      var responder = new JsonStatus({}, fakeRes);
-      var expected = {type : 500,
-                      message : 'Internal Server Error',
-                      detail : {}};
-      responder.on('error', function(data){
+      var responder = new JsonStatus({}, fakeRes, function(data){
         data.type.should.equal(expected.type);
         data.message.should.equal(expected.message);
         data.detail.should.equal(expected.detail);
         done();
       });
-      responder.internalServerError(expected.detail);
-      fakeRes.status.should.equal(expected.type);
-      fakeRes.ended.should.equal(true);
-      fakeRes.headers['Content-Type'].should.equal("application/json");
-      var response = JSON.parse(fakeRes.body);
-      response.error.should.eql(expected);
+      var expected = {type : 500,
+        message : 'Internal Server Error',
+        detail : {}};
+        responder.internalServerError(expected.detail);
+        fakeRes.status.should.equal(expected.type);
+        fakeRes.ended.should.equal(true);
+        fakeRes.headers['Content-Type'].should.equal("application/json");
+        var response = JSON.parse(fakeRes.body);
+        response.error.should.eql(expected);
     });
     it ("sets the status to 500 when the detail is a 'circular' object", function(done){
       var fakeRes = new FakeResponse();
-      var responder = new JsonStatus({}, fakeRes);
-      var circular = {};
-      circular.circular = circular;  // this is circular, in case that's not obvious
-      var expected = {type : 500,
-                      message : 'Internal Server Error',
-                      detail : '{ circular: [Circular] }'};
-      responder.on('error', function(data){
+      var responder = new JsonStatus({}, fakeRes, function(data){
         data.type.should.equal(expected.type);
         data.message.should.equal(expected.message);
         data.detail.should.equal(expected.detail);
         done();
       });
-      responder.internalServerError(circular);
-      fakeRes.status.should.equal(expected.type);
-      fakeRes.ended.should.equal(true);
-      fakeRes.headers['Content-Type'].should.equal("application/json");
-      var response = JSON.parse(fakeRes.body);
-      response.error.should.eql(expected);
+      var circular = {};
+      circular.circular = circular;  // this is circular, in case that's not obvious
+      var expected = {type : 500,
+        message : 'Internal Server Error',
+        detail : '{ circular: [Circular] }'};
+        responder.internalServerError(circular);
+        fakeRes.status.should.equal(expected.type);
+        fakeRes.ended.should.equal(true);
+        fakeRes.headers['Content-Type'].should.equal("application/json");
+        var response = JSON.parse(fakeRes.body);
+        response.error.should.eql(expected);
     });
-  });
-    it ("emits error events in the case of errors", function(done){
-      var server = connect.createServer();
+    it ("calls the error callback in the case of errors", function(done){
+      var app = connect.createServer();
       var responseSent = false;
       var errorEventSent = false;
-      var middleware = JsonStatus.connectMiddleware('status', function(data){
-        should.exist(data.req);
-        should.exist(data.res);
-        data.type.should.equal(500);
-        data.message.should.equal('Internal Server Error');
-        data.detail.should.equal('some error!');
+      var middleware = JsonStatus.connectMiddleware({ onError : function(err){
+        should.exist(err.req);
+        should.exist(err.res);
+        err.type.should.equal(500);
+        err.message.should.equal('Internal Server Error');
+        err.detail.should.equal('some error!');
         if (responseSent){
           return done();
         }
         errorEventSent = true;
-      });
-      server.use(middleware);
-      server.use(function(req, res){
+      }});
+      app.use(middleware);
+      app.use(function(req, res){
         res.status.internalServerError("some error!");
       });
-      server.listen(8082, function(){
-        request('http://localhost:8082/', function(err, res, body){
+      server = app.listen(port, function(){
+        request(url, function(err, res, body){
+          should.not.exist(err);
           res.statusCode.should.equal(500);
           JSON.parse(body).should.eql(
             {"error":{"type":500,
-                      "message":"Internal Server Error",
-                      "detail":"some error!"}});
-          if (errorEventSent){
-            return done();
-          }
-          responseSent = true;
+              "message":"Internal Server Error",
+              "detail":"some error!"}});
+              if (errorEventSent){
+                return done();
+              }
+              responseSent = true;
         });
       });
     });
+  });
   describe("#badRequest", function(){
     it ("sets the status to 400", function(done){
       var fakeRes = new FakeResponse();
-      var responder = new JsonStatus({}, fakeRes);
-      var expected = {type : 400,
-                      message : 'Bad Request',
-                      detail : 'bad request'};
-      responder.on('error', function(data){
+      var responder = new JsonStatus({}, fakeRes, function(data){
         data.type.should.equal(expected.type);
         data.message.should.equal(expected.message);
         data.detail.should.equal(expected.detail);
         done();
       });
+      var expected = {type : 400,
+                      message : 'Bad Request',
+                      detail : 'bad request'};
       responder.badRequest(expected.detail);
       fakeRes.status.should.equal(expected.type);
       fakeRes.ended.should.equal(true);
@@ -203,43 +216,60 @@ describe("JsonStatus", function(){
     it ("accepts an optional data parameter", function(){
       var fakeRes = new FakeResponse();
       var responder = new JsonStatus({}, fakeRes);
-      responder.created("SOMEURL", {data: "data"});
+      responder.created("SOMEURL", {data: "data字"}); 
+        // ^^^ kanji char for unicode test
       fakeRes.headers.Location.should.equal("SOMEURL");
       fakeRes.headers['content-type'].should.equal("application/json");
+      fakeRes.headers['content-length'].should.equal('18');
       fakeRes.status.should.equal(201);
       fakeRes.ended.should.equal(true);
-      JSON.parse(fakeRes.body).data.should.eql("data");
+      JSON.parse(fakeRes.body).data.should.eql("data字");
     });
   });
   describe("connectMiddleware", function(){
     it ("adds a 'status' object to the response object", function(done){
-      var server = connect.createServer();
-      server.use(JsonStatus.connectMiddleware());
-      server.use(function(req, res){
+      var app = connect.createServer();
+      app.use(JsonStatus.connectMiddleware());
+      app.use(function(req, res){
         res.status.accepted();
       });
-      server.listen(8081, function(){
-        request('http://localhost:8081/', function(err, res, body){
+      server = app.listen(port, function(){
+        request(url, function(err, res, body){
           res.statusCode.should.equal(202);
           body.should.equal('');
+          done();
+        });
+      });
+    });
+    it ("can do quiet 500s", function(done){
+      var app = connect.createServer();
+      app.use(JsonStatus.connectMiddleware({ quiet500 : true }));
+      app.use(function(req, res){
+        res.status.internalServerError("muahahaha!");
+      });
+      server = app.listen(port, function(){
+        request(url, function(err, res, body){
+          res.statusCode.should.equal(500);
+          JSON.parse(body).error.should.eql({
+            "type":500,
+            "message":"Internal Server Error"});
           done();
         });
       });
     });
     it ("allows you to set the name of the 'status' object", function(done){
-      var server = connect.createServer();
-      server.use(JsonStatus.connectMiddleware("ohyeah"));
-      server.use(function(req, res){
+      var app = connect.createServer();
+      app.use(JsonStatus.connectMiddleware({namespace : "ohyeah"}));
+      app.use(function(req, res){
         res.ohyeah.accepted();
       });
-      server.listen(8079, function(){
-        request('http://localhost:8079/', function(err, res, body){
+      server = app.listen(port, function(){
+        request(url, function(err, res, body){
           res.statusCode.should.equal(202);
           body.should.equal('');
           done();
         });
       });
     });
-
   });
 });

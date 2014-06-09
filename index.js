@@ -1,23 +1,32 @@
-var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
-var JsonResponder = function(req, res){
-  this.req = req;
-  this.res = res;
+var JsonResponder = function(req, res, cb){
+  if (this instanceof JsonResponder) {
+    this.req = req;
+    this.res = res;
+    this.quiet500 = false;
+    if (cb){
+      this.onError = cb;
+    }
+    return;
+  }
+  return new JsonResponder(req, res, cb);
 };
 
-JsonResponder.connectMiddleware = function(namespace, errorHandler){
-  namespace = namespace || 'status';
+JsonResponder.connectMiddleware = function(options){
+  options = options || {};
+  var namespace = options.namespace || 'status';
+  var quiet500 = options.quiet500 || false;
+  var onError = options.onError || function(){};
   return function(req, res, next){
-    res[namespace] = new JsonResponder(req, res);
-    if (errorHandler && (typeof errorHandler === 'function')){
-      res[namespace].on('error', errorHandler);
+    var responder = JsonResponder(req, res, onError);
+    if (quiet500){
+      responder.quiet500 = true;
     }
+    res[namespace] = responder;
     next();
   };
 };
-
-JsonResponder.prototype = Object.create(EventEmitter.prototype);
 
 var errors = {
   'badRequest' :            {type : 400, message : 'Bad Request'},
@@ -47,21 +56,27 @@ var makeErrorHandler = function(name, payload){
     var obj = {"error" : payload};
 
     detail = detail || {};
-    // if detail is circular, just flatten it to a string.
-    try {
-      JSON.stringify(detail);  // will throw if circular
-    } catch(ex) {
-      detail = util.inspect(detail);  // stringifies.  only goes one level deep.
+    if (this.quiet500  && (parseInt(payload.type, 10) >= 500)){
+      // suppress the details
+      delete payload.detail;
+    } else {
+      // if detail is circular, just flatten it to a string.
+      try {
+        JSON.stringify(detail);  // will throw if circular
+      } catch(ex) {
+        detail = util.inspect(detail);  // stringifies.  only goes one level deep.
+      }
+      obj.error.detail = detail;
     }
 
-    obj.error.detail = detail;
-
     this.res.setHeader('Content-Type', 'application/json');
-    this.res.writeHead(payload.type);
     var out = JSON.stringify(obj);
+    var length = Buffer.byteLength(out, 'utf8');
+    this.res.setHeader('Content-Length', length);
+    this.res.writeHead(payload.type);
     this.res.write(out);
     this.res.end();
-    this.emit("error", { req : this.req, res : this.res, type : payload.type, message : payload.message, detail : detail } );
+    this.onError({ req : this.req, res : this.res, type : payload.type, message : payload.message, detail : detail } );
   };
 };
 
@@ -73,15 +88,14 @@ for(var errorName in errors){
 JsonResponder.prototype.created = function(url, data){
   url = url || '';
   this.res.setHeader('Location', url);
+  var out = '';
   if (data){
     this.res.setHeader('content-type', 'application/json');
+    out = JSON.stringify(data);
+    this.res.setHeader('content-length', '' + Buffer.byteLength(out, 'utf8'));
   }
   this.res.writeHead(201);
-  if (data) {
-    this.res.end(JSON.stringify(data));
-  } else {
-    this.res.end();
-  }
+  this.res.end(out);
 };
 
 JsonResponder.prototype.accepted = function(){
