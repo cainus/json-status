@@ -7,6 +7,8 @@ var JsonResponder = function(req, res, cb){
     this.quiet500 = false;
     if (cb){
       this.onError = cb;
+    } else {
+      this.onError = function(){};
     }
     return;
   }

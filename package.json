@@ -10,7 +10,7 @@
     "http",
     "hypermedia"
   ],
-  "version": "0.5.0",
+  "version": "0.5.1",
   "bugs": {
     "url": "https://github.com/cainus/json-status/issues"
   },
