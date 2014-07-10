@@ -226,6 +226,18 @@ describe("JsonStatus", function(){
       JSON.parse(fakeRes.body).data.should.eql("data字");
     });
   });
+  describe("#ok", function(){
+    it ("200s with a body", function(){
+      var fakeRes = new FakeResponse();
+      var responder = new JsonStatus({}, fakeRes);
+      responder.ok({data: "data字"});
+      fakeRes.headers['content-type'].should.equal("application/json");
+      fakeRes.headers['content-length'].should.equal('18');
+      fakeRes.status.should.equal(200);
+      fakeRes.ended.should.equal(true);
+      JSON.parse(fakeRes.body).data.should.eql("data字");
+    });
+  });
   describe("connectMiddleware", function(){
     it ("adds a 'status' object to the response object", function(done){
       var app = connect.createServer();

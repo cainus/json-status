@@ -100,6 +100,17 @@ JsonResponder.prototype.created = function(url, data){
   this.res.end(out);
 };
 
+JsonResponder.prototype.ok = function(data){
+  var out = '';
+  if (data){
+    this.res.setHeader('content-type', 'application/json');
+    out = JSON.stringify(data);
+    this.res.setHeader('content-length', '' + Buffer.byteLength(out, 'utf8'));
+  }
+  this.res.writeHead(200);
+  this.res.end(out);
+};
+
 JsonResponder.prototype.accepted = function(){
   this.res.writeHead(202);
   this.res.end();
