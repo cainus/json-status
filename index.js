@@ -76,8 +76,7 @@ var makeErrorHandler = function(name, payload){
     var length = Buffer.byteLength(out, 'utf8');
     this.res.setHeader('Content-Length', length);
     this.res.writeHead(payload.type);
-    this.res.write(out);
-    this.res.end();
+    this.res.end(out, 'utf8');
     this.onError({ req : this.req, res : this.res, type : payload.type, message : payload.message, detail : detail } );
   };
 };
