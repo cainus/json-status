@@ -139,6 +139,11 @@ JsonResponder.prototype.found = function(url){
   this.res.end();
 };
 
+JsonResponder.prototype.notModified = function(url){
+  this.res.writeHead(304);
+  this.res.end();
+};
+
 JsonResponder.prototype.redirect = function(url){
   this.found(url);
 };
