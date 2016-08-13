@@ -171,6 +171,15 @@ describe("JsonStatus", function(){
       fakeRes.ended.should.equal(true);
     });
   });
+  describe("#notModified", function(){
+    it ("sets the status to 304", function(){
+      var fakeRes = new FakeResponse();
+      var responder = new JsonStatus({}, fakeRes);
+      responder.notModified();
+      fakeRes.status.should.equal(304);
+      fakeRes.ended.should.equal(true);
+    });
+  });
   describe("#OPTIONS", function(){
     it ("sets the Allow header and sets the status to 200", function(){
       var fakeRes = new FakeResponse();
